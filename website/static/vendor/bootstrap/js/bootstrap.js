@@ -19,6 +19,11 @@ function sanitizeSelector(selector) {
     // Use a whitelist approach to only allow valid characters in a selector
     return selector.replace(/[^\w-#.:]/g, '');
 }
+function sanitizeInput(input) {
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(input));
+    return div.innerHTML;
+}
 /* ========================================================================
  * Bootstrap: transition.js v3.3.7
  * http://getbootstrap.com/javascript/#transitions
@@ -687,9 +692,9 @@ function sanitizeSelector(selector) {
         this[this.$element.hasClass('in') ? 'hide' : 'show']()
     }
 
-    Collapse.prototype.getParent = function () {
-        return $(this.options.parent)
-            .find('[data-toggle="collapse"][data-parent="' + this.options.parent + '"]')
+    Collapse.prototype.getParent = function () {var sanitizedParent = sanitizeSelector(this.options.parent);
+        return $(sanitizedParent)
+            .find('[data-toggle="collapse"][data-parent="' + sanitizedParent + '"]')
             .each($.proxy(function (i, element) {
                 var $element = $(element)
                 this.addAriaAndCollapsedClass(getTargetFromTrigger($element), $element)
@@ -708,8 +713,8 @@ function sanitizeSelector(selector) {
 
     function getTargetFromTrigger($trigger) {
         var href
-        var target = $trigger.attr('data-target')
-            || (href = $trigger.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '') // strip for ie7
+        var target = sanitizeSelector($trigger.attr('data-target'))
+            || (href = sanitizeSelector($trigger.attr('href'))) && href.replace(/.*(?=#[^\s]+$)/, '') // strip for ie7
 
         return $(target)
     }
@@ -786,7 +791,7 @@ function sanitizeSelector(selector) {
     Dropdown.VERSION = '3.3.7'
 
     function getParent($this) {
-        var selector = $this.attr('data-target')
+        var selector = sanitizeSelector($this.attr('data-target'))
 
         if (!selector) {
             selector = $this.attr('href')
@@ -1254,7 +1259,7 @@ function sanitizeSelector(selector) {
     $(document).on('click.bs.modal.data-api', '[data-toggle="modal"]', function (e) {
         var $this = $(this)
         var href = $this.attr('href')
-        var $target = $($this.attr('data-target') || (href && href.replace(/.*(?=#[^\s]+$)/, ''))) // strip for ie7
+        var $target = $((sanitizeSelector($this.attr('data-target'))) || (href && sanitizeSelector(href.replace(/.*(?=#[^\s]+$)/, ''))));
         var option = $target.data('bs.modal') ? 'toggle' : $.extend({remote: !/#/.test(href) && href}, $target.data(), $this.data())
 
         if ($this.is('a')) e.preventDefault()
@@ -1323,7 +1328,7 @@ function sanitizeSelector(selector) {
         this.type = type
         this.$element = $(element)
         this.options = this.getOptions(options)
-        this.$viewport = this.options.viewport && $($.isFunction(this.options.viewport) ? this.options.viewport.call(this, this.$element) : (this.options.viewport.selector || this.options.viewport))
+        this.$viewport = this.options.viewport && $(sanitizeSelector($.isFunction(this.options.viewport) ? this.options.viewport.call(this, this.$element) : (this.options.viewport.selector || this.options.viewport)))
         this.inState = {click: false, hover: false, focus: false}
 
         if (this.$element[0] instanceof document.constructor && !this.options.selector) {
@@ -1476,7 +1481,7 @@ function sanitizeSelector(selector) {
                 .addClass(placement)
                 .data('bs.' + this.type, this)
 
-            this.options.container ? $tip.appendTo(this.options.container) : $tip.insertAfter(this.$element)
+            this.options.container ? $tip.appendTo(sanitizeSelector(this.options.container)) : $tip.insertAfter(this.$element)
             this.$element.trigger('inserted.bs.' + this.type)
 
             var pos = this.getPosition()
@@ -1576,7 +1581,13 @@ function sanitizeSelector(selector) {
 
     Tooltip.prototype.setContent = function () {
         var $tip = this.tip()
-        var title = escapeHTML(this.getTitle())
+        var title = this.getTitle()
+        if(this.options.html){
+            title = sanitizeInput(title);
+        }
+        else{
+            title = sanitizeSelector(title);
+        }
 
         $tip.find('.tooltip-inner')[this.options.html ? 'html' : 'text'](title)
         $tip.removeClass('fade in top bottom left right')
@@ -2017,7 +2028,7 @@ function sanitizeSelector(selector) {
             '[data-target="' + target + '"],' +
             this.selector + '[href="' + target + '"]'
 
-        var active = $(selector)
+        var active = $(escapePotentialXSS(selector))
             .parents('li')
             .addClass('active')
 
@@ -2031,7 +2042,7 @@ function sanitizeSelector(selector) {
     }
 
     ScrollSpy.prototype.clear = function () {
-        $(this.selector)
+        $(escapePotentialXSS(this.selector))
             .parentsUntil(this.options.target, '.active')
             .removeClass('active')
     }
@@ -2252,7 +2263,7 @@ function sanitizeSelector(selector) {
     var Affix = function (element, options) {
         this.options = $.extend({}, Affix.DEFAULTS, options)
 
-        this.$target = $(this.options.target)
+        this.$target = $(sanitizeSelector(this.options.target))
             .on('scroll.bs.affix.data-api', $.proxy(this.checkPosition, this))
             .on('click.bs.affix.data-api', $.proxy(this.checkPositionWithEventLoop, this))
 
@@ -2396,3 +2407,20 @@ function sanitizeSelector(selector) {
     })
 
 }(jQuery);
+function escapePotentialXSS(selector) {
+    // Escaping only the specific characters that can lead to XSS
+    // such as <, >, ", ', and ` which are not valid in CSS selectors
+    // and can be used for XSS if injected into HTML content.
+    return selector.replace(/[<>\"'`]/g, function(match) {
+        // Convert potentially dangerous characters to their
+        // corresponding HTML entity representations.
+        switch(match) {
+            case '<': return '&lt;';
+            case '>': return '&gt;';
+            case '"': return '&quot;';
+            case '\'': return '&#39;';
+            case '`': return '&#96;';
+            default: return match;
+        }
+    });
+}
