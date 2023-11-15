@@ -511,16 +511,17 @@ Django = ">=2.2"
 
 [[package]]
 name = "django-cors-headers"
-version = "4.3.0"
+version = "4.3.1"
 description = "django-cors-headers is a Django application for handling the server headers required for Cross-Origin Resource Sharing (CORS)."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "django_cors_headers-4.3.0-py3-none-any.whl", hash = "sha256:bd36c7aea0d070e462f3383f0dc9ef717e5fdc2b10a99c98c285f16da84ffba2"},
-    {file = "django_cors_headers-4.3.0.tar.gz", hash = "sha256:25aabc94d4837678c1edf442c7f68a5f5fd151f6767b0e0b01c61a2179d02711"},
+    {file = "django-cors-headers-4.3.1.tar.gz", hash = "sha256:0bf65ef45e606aff1994d35503e6b677c0b26cafff6506f8fd7187f3be840207"},
+    {file = "django_cors_headers-4.3.1-py3-none-any.whl", hash = "sha256:0b1fd19297e37417fc9f835d39e45c8c642938ddba1acce0c1753d3edef04f36"},
 ]
 
 [package.dependencies]
+asgiref = ">=3.6"
 Django = ">=3.2"
 
 [[package]]
@@ -1861,13 +1862,13 @@ urllib3 = {version = ">=1.26,<3", extras = ["socks"]}
 
 [[package]]
 name = "sentry-sdk"
-version = "1.34.0"
+version = "1.35.0"
 description = "Python client for Sentry (https://sentry.io)"
 optional = false
 python-versions = "*"
 files = [
-    {file = "sentry-sdk-1.34.0.tar.gz", hash = "sha256:e5d0d2b25931d88fa10986da59d941ac6037f742ab6ff2fce4143a27981d60c3"},
-    {file = "sentry_sdk-1.34.0-py2.py3-none-any.whl", hash = "sha256:76dd087f38062ac6c1e30ed6feb533ee0037ff9e709974802db7b5dbf2e5db21"},
+    {file = "sentry-sdk-1.35.0.tar.gz", hash = "sha256:04e392db9a0d59bd49a51b9e3a92410ac5867556820465057c2ef89a38e953e9"},
+    {file = "sentry_sdk-1.35.0-py2.py3-none-any.whl", hash = "sha256:a7865952701e46d38b41315c16c075367675c48d049b90a4cc2e41991ebc7efa"},
 ]
 
 [package.dependencies]
@@ -1982,13 +1983,13 @@ test = ["pytest", "pytest-cov"]
 
 [[package]]
 name = "stripe"
-version = "7.3.0"
+version = "7.4.0"
 description = "Python bindings for the Stripe API"
 optional = false
 python-versions = ">=3.6"
 files = [
-    {file = "stripe-7.3.0-py2.py3-none-any.whl", hash = "sha256:77bd0c3020ef7a5f3005127152898f6aabfe6056d11f1175902c50158911e332"},
-    {file = "stripe-7.3.0.tar.gz", hash = "sha256:4288d180cf63a60cb4803282830f862a8954e45207eb6e1d0870171b15234c94"},
+    {file = "stripe-7.4.0-py2.py3-none-any.whl", hash = "sha256:475ef52ed0bdea1c115460bd211a840ae02f9f678c6c8fd59c459ccb73f95724"},
+    {file = "stripe-7.4.0.tar.gz", hash = "sha256:3dc7dd823936d3262dd430abe57438af32e8910352dbb34eb296bfdb59ef0aec"},
 ]
 
 [package.dependencies]
@@ -2267,4 +2268,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "3.11.2"
-content-hash = "69f3867263fcce261d55eeedd9575a18e0c12d47e56e9a0c1c7e051f3aa6554f"
+content-hash = "742ed6f118afc651c6944e7b10cb91bd43ec2d3c91267b381cc322e9bdf50adc"
