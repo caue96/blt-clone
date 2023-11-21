@@ -747,7 +747,7 @@ class IssueCreate(IssueBaseCreate, CreateView):
                 self.request.session["domain"] = domain.id
                 login_url = reverse("account_login")
                 messages.success(self.request, "Bug added!")
-                return redirect(redirect_url)
+                return HttpResponseRedirect("{}?next={}".format(login_url, redirect_url))
 
             if tokenauth:
                 self.process_issue(
@@ -756,7 +756,7 @@ class IssueCreate(IssueBaseCreate, CreateView):
                 return JsonResponse("Created", safe=False)
             else:
                 self.process_issue(self.request.user, obj, domain_exists, domain)
-                return HttpResponseRedirect(self.request.META.get("HTTP_REFERER"))
+                return HttpResponseRedirect(redirect_url + "/")
         
         return create_issue(self,form)
 
@@ -1466,7 +1466,7 @@ def search(request, template="search.html"):
             "query": query,
             "type": stype,
             "users": UserProfile.objects.filter(
-                Q(user__username__icontains=query), hunt=None
+                Q(user__username__icontains=query)
             )
             .annotate(total_score=Sum("user__points__score"))
             .order_by("-total_score")[0:20],
@@ -1614,6 +1614,8 @@ class IssueView(DetailView):
         context["all_users"] = User.objects.all()
         context["likes"] = UserProfile.objects.filter(issue_upvoted=self.object).count()
         context["likers"] = UserProfile.objects.filter(issue_upvoted=self.object)
+        context["dislikes"] = UserProfile.objects.filter(issue_downvoted=self.object).count()
+        context["dislikers"] = UserProfile.objects.filter(issue_downvoted=self.object)
 
         context["flags"] = UserProfile.objects.filter(issue_flaged=self.object).count()
         context["flagers"] = UserProfile.objects.filter(issue_flaged=self.object)
@@ -1903,6 +1905,10 @@ def like_issue(request, issue_pk):
     issue_pk = int(issue_pk)
     issue = Issue.objects.get(pk=issue_pk)
     userprof = UserProfile.objects.get(user=request.user)
+
+    if userprof in UserProfile.objects.filter(issue_downvoted=issue):
+        userprof.issue_downvoted.remove(issue)
+
     if userprof in UserProfile.objects.filter(issue_upvoted=issue):
         userprof.issue_upvoted.remove(issue)
     else:
@@ -1939,7 +1945,37 @@ def like_issue(request, issue_pk):
     total_votes = UserProfile.objects.filter(issue_upvoted=issue).count()
     context["object"] = issue
     context["likes"] = total_votes
-    return render(request, "_likes.html", context)
+    context["likers"] = UserProfile.objects.filter(issue_upvoted=issue)
+    context["dislikes"] = UserProfile.objects.filter(issue_downvoted=issue).count()
+    context["dislikers"] = UserProfile.objects.filter(issue_downvoted=issue)
+
+    return render(request, "_likes_and_dislikes.html", context)
+
+
+@login_required(login_url="/accounts/login")
+def dislike_issue(request, issue_pk):
+    context = {}
+    issue_pk = int(issue_pk)
+    issue = Issue.objects.get(pk=issue_pk)
+    userprof = UserProfile.objects.get(user=request.user)
+
+    if userprof in UserProfile.objects.filter(issue_upvoted=issue):
+        userprof.issue_upvoted.remove(issue)
+    
+    if userprof in UserProfile.objects.filter(issue_downvoted=issue):
+        userprof.issue_downvoted.remove(issue)
+    else:
+        userprof.issue_downvoted.add(issue)
+
+    userprof.save()
+    total_downvotes = UserProfile.objects.filter(issue_downvoted=issue).count()
+    context["object"] = issue
+    context["likes"] = UserProfile.objects.filter(issue_upvoted=issue).count()
+    context["likers"] = UserProfile.objects.filter(issue_upvoted=issue)
+    context["dislikes"] = total_downvotes
+    context["dislikers"] = UserProfile.objects.filter(issue_downvoted=issue)
+
+    return render(request, "_likes_and_dislikes.html", context)
 
 
 @login_required(login_url="/accounts/login")
